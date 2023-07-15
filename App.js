@@ -1,20 +1,95 @@
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useContext, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import AuthContextProvider, { AuthContext, userTokenKey } from './store/auth-context';
+import { Colors } from './constants/styles';
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
+import WelcomeScreen from './screens/WelcomeScreen';
+import IconButton from './components/ui/IconButton';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SplashScreen from 'expo-splash-screen';
 
-export default function App() {
+const Stack = createNativeStackNavigator();
+SplashScreen.preventAutoHideAsync();
+
+const screenOptions = {
+  headerTintColor: Colors.textWhite,
+  headerStyle: { backgroundColor: Colors.primary500 },
+  contentStyle: { backgroundColor: Colors.primary100 },
+};
+
+function AuthenticatingStack() {
   return (
-    <View style={styles.container}>
-      <Text>Open up App.js to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Signup" component={SignupScreen} />
+    </Stack.Navigator>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+function AuthenticatedStack() {
+  const authContext = useContext(AuthContext);
+
+  return (
+    <Stack.Navigator screenOptions={screenOptions}>
+      <Stack.Screen
+        name="Welcome"
+        component={WelcomeScreen}
+        options={{
+          headerRight: ({ tintColor }) => (
+            <IconButton icon="exit" size={24} color={tintColor} onPress={authContext.logout} />
+          ),
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function Navigation() {
+  const authContext = useContext(AuthContext);
+
+  return (
+    <NavigationContainer>
+      {authContext.isAuthenticated ? <AuthenticatedStack /> : <AuthenticatingStack />}
+    </NavigationContainer>
+  );
+}
+
+function Root() {
+  const authContext = useContext(AuthContext);
+  const [isLoginInProgress, setIsLoginInProgress] = useState(true);
+
+  useEffect(() => {
+    async function loadingDataAsync() {
+      try {
+        const token = await AsyncStorage.getItem(userTokenKey);
+
+        if (token) {
+          authContext.authenticate(token);
+        }
+      } catch (e) {
+        console.warn(e);
+      } finally {
+        setIsLoginInProgress(false);
+        SplashScreen.hideAsync();
+      }
+    }
+
+    loadingDataAsync();
+  }, []);
+
+  return !isLoginInProgress ? <Navigation /> : null;
+}
+
+export default function App() {
+  return (
+    <>
+      <StatusBar style="light" />
+      <AuthContextProvider>
+        <Root />
+      </AuthContextProvider>
+    </>
+  );
+}
