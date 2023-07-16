@@ -1,5 +1,5 @@
 import AuthContent from '../components/Auth/AuthContent';
-import { AuthContext } from '../store/auth-context';
+import { AuthContext } from '../store/context/auth-context';
 import { createUser } from '../helpers/auth';
 import { useContext, useState } from 'react';
 import LoadingOverlay from '../components/ui/LoadingOverlay';

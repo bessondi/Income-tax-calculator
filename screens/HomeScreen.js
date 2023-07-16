@@ -1,9 +1,9 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
-import { AuthContext } from '../store/auth-context';
+import { AuthContext } from '../store/context/auth-context';
 
-function WelcomeScreen() {
+function HomeScreen() {
   const [message, setMessage] = useState('');
 
   const authContext = useContext(AuthContext);
@@ -17,13 +17,13 @@ function WelcomeScreen() {
 
   return (
     <View style={styles.rootContainer}>
-      <Text style={styles.title}>Welcome</Text>
+      <Text style={styles.title}>Home</Text>
       <Text style={styles.message}>{message}</Text>
     </View>
   );
 }
 
-export default WelcomeScreen;
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   rootContainer: {

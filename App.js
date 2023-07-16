@@ -2,11 +2,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useContext, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import AuthContextProvider, { AuthContext, userTokenKey } from './store/auth-context';
+import AuthContextProvider, { AuthContext, userTokenKey } from './store/context/auth-context';
 import { Colors } from './constants/styles';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
-import WelcomeScreen from './screens/WelcomeScreen';
+import HomeScreen from './screens/HomeScreen';
 import IconButton from './components/ui/IconButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
@@ -35,9 +35,10 @@ function AuthenticatedStack() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Welcome"
-        component={WelcomeScreen}
+        name="Income App"
+        component={HomeScreen}
         options={{
+          headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,
           headerRight: ({ tintColor }) => (
             <IconButton icon="exit" size={24} color={tintColor} onPress={authContext.logout} />
           ),

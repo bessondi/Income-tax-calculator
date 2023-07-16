@@ -4,10 +4,10 @@ import { Alert, StyleSheet, View } from 'react-native';
 import FlatButton from '../ui/FlatButton';
 import AuthForm from './AuthForm';
 import { Colors } from '../../constants/styles';
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from '@react-navigation/native';
 
 function AuthContent({ isLogin, onAuthenticate }) {
-  const navigation = useNavigation()
+  const navigation = useNavigation();
 
   const [credentialsInvalid, setCredentialsInvalid] = useState({
     email: false,
@@ -18,10 +18,9 @@ function AuthContent({ isLogin, onAuthenticate }) {
 
   function switchAuthModeHandler() {
     if (isLogin) {
-      navigation.replace('Signup')
+      navigation.replace('Signup');
     } else {
-      navigation.replace('Login')
-
+      navigation.replace('Login');
     }
   }
 
@@ -36,11 +35,7 @@ function AuthContent({ isLogin, onAuthenticate }) {
     const emailsAreEqual = email === confirmEmail;
     const passwordsAreEqual = password === confirmPassword;
 
-    if (
-      !emailIsValid ||
-      !passwordIsValid ||
-      (!isLogin && (!emailsAreEqual || !passwordsAreEqual))
-    ) {
+    if (!emailIsValid || !passwordIsValid || (!isLogin && (!emailsAreEqual || !passwordsAreEqual))) {
       Alert.alert('Invalid input', 'Please check your entered credentials.');
       setCredentialsInvalid({
         email: !emailIsValid,
@@ -55,15 +50,9 @@ function AuthContent({ isLogin, onAuthenticate }) {
 
   return (
     <View style={styles.authContent}>
-      <AuthForm
-        isLogin={isLogin}
-        onSubmit={submitHandler}
-        credentialsInvalid={credentialsInvalid}
-      />
+      <AuthForm isLogin={isLogin} onSubmit={submitHandler} credentialsInvalid={credentialsInvalid} />
       <View style={styles.buttons}>
-        <FlatButton onPress={switchAuthModeHandler}>
-          {isLogin ? 'Create a new user' : 'Log in instead'}
-        </FlatButton>
+        <FlatButton onPress={switchAuthModeHandler}>{isLogin ? 'Create a new user' : 'Log in instead'}</FlatButton>
       </View>
     </View>
   );
