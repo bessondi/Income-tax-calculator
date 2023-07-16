@@ -4,10 +4,7 @@ import { Colors } from '../../constants/styles';
 
 function Button({ children, onPress }) {
   return (
-    <Pressable
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
-      onPress={onPress}
-    >
+    <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]} onPress={onPress}>
       <View>
         <Text style={styles.buttonText}>{children}</Text>
       </View>
@@ -36,6 +33,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
 });
