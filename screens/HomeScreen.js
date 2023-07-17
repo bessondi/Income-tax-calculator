@@ -1,10 +1,11 @@
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 import { useCallback, useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../store/context/auth-context';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import Button from '../components/ui/Button';
+import { Keyboard } from 'react-native';
 
 function HomeScreen() {
   const [currencyRate, setCurrencyRate] = useState('');
@@ -16,7 +17,7 @@ function HomeScreen() {
   const authContext = useContext(AuthContext);
   const token = authContext.token;
 
-  const onChange = (_, selectedDate) => {
+  const onChangeDate = (_, selectedDate) => {
     setDate(selectedDate);
   };
 
@@ -27,7 +28,7 @@ function HomeScreen() {
       .catch(err => console.log('Message missing', err));
   }, [token]);
 
-  const calculate = useCallback(() => {
+  const calculateTax = useCallback(() => {
     const chosenIncome = parseFloat(amountValue);
 
     if (!chosenIncome && !selectedCurrency) {
@@ -59,46 +60,44 @@ function HomeScreen() {
   }, [amountValue, selectedCurrency, date]);
 
   return (
-    <View style={styles.rootContainer}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Monthly Income</Text>
-        <Text style={styles.message}>{message}</Text>
-      </View>
-      <View style={styles.body}>
-        <TextInput
-          style={styles.input}
-          onChangeText={setAmountValue}
-          value={amountValue}
-          placeholder="Type your income amount"
-          inputMode="numeric"
-          keyboardType="numeric"
-        />
-        <TextInput
-          style={styles.input}
-          onChangeText={setTaxPercentValue}
-          value={taxPercentValue}
-          placeholder="Type your tax percent"
-          inputMode="numeric"
-          keyboardType="numeric"
-        />
-        <Picker selectedValue={selectedCurrency} onValueChange={itemValue => setSelectedCurrency(itemValue)}>
-          <Picker.Item label="GEL" value="GEL" />
-          <Picker.Item label="USD" value="USD" />
-          <Picker.Item label="EUR" value="EUR" />
-        </Picker>
-        <View style={styles.datePicker}>
-          <DateTimePicker testID="dateTimePicker" value={date} mode="date" is24Hour={true} onChange={onChange} />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      <View style={styles.rootContainer}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Monthly Income</Text>
+          <Text style={styles.message}>{message}</Text>
         </View>
-      </View>
+        <View style={styles.body}>
+          <TextInput
+            style={styles.input}
+            onChangeText={setAmountValue}
+            value={amountValue}
+            placeholder="Type your income amount"
+            keyboardType="numeric"
+          />
+          <TextInput
+            style={styles.input}
+            onChangeText={setTaxPercentValue}
+            value={taxPercentValue}
+            placeholder="Type your tax percent"
+            keyboardType="numeric"
+          />
+          <Picker selectedValue={selectedCurrency} onValueChange={itemValue => setSelectedCurrency(itemValue)}>
+            <Picker.Item label="GEL" value="GEL" />
+            <Picker.Item label="USD" value="USD" />
+            <Picker.Item label="EUR" value="EUR" />
+          </Picker>
+          <View style={styles.datePicker}>
+            <DateTimePicker testID="dateTimePicker" value={date} mode="date" is24Hour={true} onChange={onChangeDate} />
+          </View>
+        </View>
 
-      <View style={styles.button}>
-        <Button disabled={!!amountValue && !!taxPercentValue} onPress={calculate}>
-          Calculate
-        </Button>
-      </View>
+        <View style={styles.button}>
+          <Button onPress={calculateTax}>Calculate</Button>
+        </View>
 
-      <Text style={styles.result}>{!!currencyRate ? `Your Month Tax Value: ${currencyRate}` : null}</Text>
-    </View>
+        <Text style={styles.result}>{!!currencyRate ? `Your Month Tax Value: ${currencyRate}` : null}</Text>
+      </View>
+    </TouchableWithoutFeedback>
   );
 }
 
