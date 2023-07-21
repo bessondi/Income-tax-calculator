@@ -35,7 +35,7 @@ function AuthenticatedStack() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Income App"
+        name="Georgia Tax Calculator"
         component={HomeScreen}
         options={{
           headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,

@@ -2,10 +2,10 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '../../constants/styles';
 
-function Button({ children, onPress }) {
+function Button({ children, onPress, isMediumSize }) {
   return (
     <Pressable style={({ pressed }) => [styles.button, pressed && styles.pressed]} onPress={onPress}>
-      <View>
+      <View style={isMediumSize ? styles.buttonMediumSize : null}>
         <Text style={styles.buttonText}>{children}</Text>
       </View>
     </Pressable>
@@ -34,5 +34,10 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  buttonMediumSize: {
+    borderRadius: 6,
+    padding: 8,
+    backgroundColor: Colors.primary500,
   },
 });
