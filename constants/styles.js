@@ -7,6 +7,7 @@ export const Colors = {
   error500: '#f37c13',
 
   textWhite: '#ffffff',
-  textGray: '#565656',
-  green: '#8db600',
+  gray: '#565656',
+  lightGray: '#dadada',
+  green: '#5BC236',
 };

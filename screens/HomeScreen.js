@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TextInput, TouchableWithoutFeedback, View } from 'react-native';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../store/context/auth-context';
 import DropDownPicker from 'react-native-dropdown-picker';
@@ -7,6 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import Button from '../components/ui/Button';
 import { Keyboard } from 'react-native';
 import { Colors } from '../constants/styles';
+import Loader from '../components/ui/Loader';
 
 const currencyList = [
   { label: 'USD', value: 'USD' },
@@ -15,19 +16,70 @@ const currencyList = [
 ];
 
 function HomeScreen() {
-  // const [isLoadingData, setIsLoadingData] = useState(false); // TODO: Add loader
   const [currencyRate, setCurrencyRate] = useState('');
-  const [messageFromServer, setMessageFromServer] = useState('');
+  const [isCalculationAvailable, setIsCalculationAvailable] = useState(false);
+  const [hasTaxCalculation, setHasTaxCalculation] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [taxPercentValue, setTaxPercentValue] = useState('');
   const [amountValue, setAmountValue] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
   const [date, setDate] = useState(new Date());
+  const [messageFromServer, setMessageFromServer] = useState('');
   const authContext = useContext(AuthContext);
   const token = authContext.token;
 
+  const CalculateButton = () => {
+    return (
+      <View style={styles.footer}>
+        <Button onPress={calculateTax} isMediumSize={true} isDisable={isCalculationAvailable}>
+          Calculate Tax
+        </Button>
+      </View>
+    );
+  };
+
+  const CalculationResult = () => {
+    return <Text style={styles.result}>{`Your tax for this month is \n ₾ ${currencyRate}`}</Text>;
+  };
+
   const onChangeDate = (_, selectedDate) => {
     setDate(selectedDate);
+  };
+
+  const calculateTax = () => {
+    const chosenIncome = parseFloat(amountValue);
+
+    if (selectedCurrency === 'GEL' && taxPercentValue) {
+      setCurrencyRate(((chosenIncome / 100) * taxPercentValue).toFixed(2));
+      setHasTaxCalculation(true);
+      return;
+    }
+
+    setIsLoadingData(true);
+
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    const chosenDate = `${year}-${month}-${day}`;
+    const bankCurrencyApi = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=${selectedCurrency}&date=${chosenDate}`;
+
+    axios
+      .get(bankCurrencyApi)
+      .then(response => {
+        const rate = parseFloat(response.data[0].currencies[0].rate);
+
+        if (rate && chosenIncome && taxPercentValue) {
+          setCurrencyRate((((rate * chosenIncome) / 100) * taxPercentValue).toFixed(2));
+        }
+
+        setHasTaxCalculation(true);
+      })
+      .catch(err => {
+        setHasTaxCalculation(false);
+        console.log('Something went wrong:', err);
+      })
+      .finally(() => setIsLoadingData(false));
   };
 
   useEffect(() => {
@@ -37,35 +89,14 @@ function HomeScreen() {
       .catch(err => console.log('Message missing', err));
   }, [token]);
 
-  const calculateTax = useCallback(() => {
-    const chosenIncome = parseFloat(amountValue);
-
-    if (!chosenIncome && !selectedCurrency) {
-      return;
+  useEffect(() => {
+    const isFormValid = !!(parseInt(amountValue) && parseInt(taxPercentValue) && selectedCurrency && date);
+    if (isFormValid) {
+      setIsCalculationAvailable(true);
+      setHasTaxCalculation(false);
+    } else {
+      setIsCalculationAvailable(false);
     }
-
-    if (selectedCurrency === 'GEL' && taxPercentValue) {
-      setCurrencyRate(((chosenIncome / 100) * taxPercentValue).toFixed(2));
-      return;
-    }
-
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const chosenDate = `${year}-${month}-${day}`;
-
-    const bankCurrencyApi = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=${selectedCurrency}&date=${chosenDate}`;
-
-    axios
-      .get(bankCurrencyApi)
-      .then(response => {
-        const rate = parseFloat(response.data[0].currencies[0].rate); // TODO: Add useMemo
-
-        if (rate && chosenIncome && taxPercentValue) {
-          setCurrencyRate((((rate * chosenIncome) / 100) * taxPercentValue).toFixed(2));
-        }
-      })
-      .catch(err => console.log('Something went wrong:', err));
   }, [amountValue, taxPercentValue, selectedCurrency, date]);
 
   return (
@@ -110,7 +141,7 @@ function HomeScreen() {
                 style={styles.currencyPicker}
               />
             </View>
-            <View style={styles.bottomRight}>
+            <View>
               <Text style={styles.dateLabel}>Income date</Text>
               <DateTimePicker
                 testID="dateTimePicker"
@@ -124,13 +155,16 @@ function HomeScreen() {
           </View>
         </View>
 
-        <View style={styles.footer}>
-          <Button onPress={calculateTax} isMediumSize={true}>
-            Calculate
-          </Button>
-        </View>
-
-        <Text style={styles.result}>{!!currencyRate ? `Your tax for this month is ₾${currencyRate}` : null}</Text>
+        {hasTaxCalculation ? (
+          !!currencyRate ? (
+            <CalculationResult />
+          ) : null
+        ) : isLoadingData ? (
+          <Loader />
+        ) : (
+          <CalculateButton />
+        )}
+        {}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -149,12 +183,12 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: Colors.textGray,
+    color: Colors.gray,
     marginBottom: 4,
   },
   dateLabel: {
     fontSize: 12,
-    color: Colors.textGray,
+    color: Colors.gray,
     marginBottom: 4,
     textAlign: 'right',
   },
@@ -177,7 +211,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     height: 46,
     padding: 10,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderRadius: 8,
   },
@@ -187,16 +221,15 @@ const styles = StyleSheet.create({
   bottomLeft: {
     flex: 1,
   },
-  bottomRight: {
-    flex: 1,
-  },
   currencyPicker: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   datePicker: {
-    marginTop: 6,
+    marginTop: 8,
   },
   footer: {
+    marginTop: 12,
+    width: '100%',
     zIndex: -1,
   },
   result: {
@@ -207,9 +240,10 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
     borderColor: Colors.green,
     borderWidth: 1,
-    borderRadius: 24,
-    marginTop: 48,
+    borderRadius: 16,
+    marginTop: 12,
     padding: 16,
     width: '100%',
+    zIndex: -1,
   },
 });
