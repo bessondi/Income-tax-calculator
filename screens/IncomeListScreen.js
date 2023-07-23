@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { useContext, useEffect, useState } from 'react';
-import { getDocs, collection } from 'firebase/firestore';
+import { getDoc, doc } from 'firebase/firestore';
 import { firestoreDB } from '../constants/firebase-config';
 import { Colors } from '../constants/styles';
 import { AuthContext } from '../store/context/auth-context';
@@ -8,9 +8,9 @@ import { currenciesIcons, monthsList } from '../constants/consts';
 
 function IncomeListScreen() {
   const authContext = useContext(AuthContext);
-  const [incomeList, setIncomeList] = useState([]);
+  const [incomes, setIncomes] = useState({ incomesList: [] });
 
-  function getMonth(date) {
+  function getMonth(date = '') {
     const month = date.split('-').slice(1, 2).join('');
     return month.charAt(0) !== '0' ? monthsList[month - 1] : monthsList[month.charAt(1) - 1];
   }
@@ -23,17 +23,15 @@ function IncomeListScreen() {
   useEffect(() => {
     const getIncomesData = async () => {
       if (authContext.isAuthenticated) {
-        const snapshot = await getDocs(collection(firestoreDB, 'users'));
-        const incomes = [];
+        const docRef = doc(firestoreDB, 'users', authContext.uid);
+        const docSnap = await getDoc(docRef);
 
-        snapshot.forEach(doc => {
-          incomes.push({
-            id: (Math.random() + 1).toString(36).substring(2),
-            data: doc.data(),
-          });
-        });
-
-        setIncomeList(incomes);
+        if (docSnap.exists()) {
+          console.log('Document data:', docSnap.data());
+          setIncomes(docSnap.data());
+        } else {
+          console.log('No such document!');
+        }
       }
     };
 
@@ -44,17 +42,19 @@ function IncomeListScreen() {
     <View style={styles.rootContainer}>
       <Text style={styles.heading}>Previous incomes</Text>
 
-      {incomeList.map(income => (
-        <View key={income.id} style={styles.card}>
-          <Text style={styles.month}>{getMonth(income.data.incomeDate)}</Text>
-          <Text style={styles.incomeAmount}>
-            {getCurrencyIcon(income.data.currency)} {income.data.incomeAmount}
-          </Text>
-          <Text style={styles.taxAmountInLari}>
-            {getCurrencyIcon()} {income.data.taxAmountInLari}
-          </Text>
-        </View>
-      ))}
+      {incomes.incomesList
+        ? incomes.incomesList.map(data => (
+            <View key={data.id} style={styles.card}>
+              <Text style={styles.month}>{getMonth(data.incomeDate)}</Text>
+              <Text style={styles.incomeAmount}>
+                {getCurrencyIcon(data.currency)} {data.incomeAmount}
+              </Text>
+              <Text style={styles.taxAmountInLari}>
+                {getCurrencyIcon()} {data.taxAmountInLari}
+              </Text>
+            </View>
+          ))
+        : null}
     </View>
   );
 }

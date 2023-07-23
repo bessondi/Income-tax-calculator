@@ -15,7 +15,8 @@ function LoginScreen() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const token = await userCredential.user.getIdToken();
-      authContext.authenticate(token);
+      const uid = userCredential.user.uid;
+      await authContext.authenticate(uid, token);
     } catch (_) {
       Alert.alert('Authentication failed', 'Try again later');
       setIsAuthenticating(false);

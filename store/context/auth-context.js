@@ -5,15 +5,18 @@ import { auth } from '../../constants/firebase-config';
 
 export const AuthContext = createContext({
   token: '',
+  uid: '',
   isAuthenticated: false,
-  authenticate: () => {},
-  logout: () => {},
+  authenticate: async () => {},
+  logout: async () => {},
 });
 
+export const userUidKey = 'userUid';
 export const userTokenKey = 'userToken';
 
 function AuthContextProvider({ children }) {
   const [authToken, setAuthToken] = useState('');
+  const [userUid, setUserUid] = useState('');
   const [isAuth, setIsAuth] = useState(false);
 
   auth.onAuthStateChanged(user => {
@@ -24,21 +27,26 @@ function AuthContextProvider({ children }) {
     }
   });
 
-  function authenticate(token) {
+  async function authenticate(uid, token) {
+    setUserUid(uid);
+    await AsyncStorage.setItem(userUidKey, uid);
     setAuthToken(token);
-    AsyncStorage.setItem(userTokenKey, token);
+    await AsyncStorage.setItem(userTokenKey, token);
   }
 
-  function logout() {
+  async function logout() {
     const auth = getAuth();
     signOut(auth).then(() => console.log('signOut'));
 
+    setUserUid(null);
+    await AsyncStorage.removeItem(userUidKey);
     setAuthToken(null);
-    AsyncStorage.removeItem(userTokenKey);
+    await AsyncStorage.removeItem(userTokenKey);
   }
 
   const value = {
     token: authToken,
+    uid: userUid,
     isAuthenticated: isAuth,
     authenticate,
     logout,

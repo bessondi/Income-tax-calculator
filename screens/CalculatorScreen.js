@@ -8,9 +8,9 @@ import Button from '../components/ui/Button';
 import { Keyboard } from 'react-native';
 import { Colors } from '../constants/styles';
 import Loader from '../components/ui/Loader';
-import { collection, addDoc } from 'firebase/firestore';
 import { firestoreDB } from '../constants/firebase-config';
 import { currencyList } from '../constants/consts';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 function CalculatorScreen() {
   const [currencyRate, setCurrencyRate] = useState('');
@@ -70,17 +70,18 @@ function CalculatorScreen() {
 
           setCurrencyRate(taxAmount);
           setHasTaxCalculation(true);
-          console.log('currencyRate', taxAmount);
 
-          return authContext.isAuthenticated
-            ? addDoc(collection(firestoreDB, 'users'), {
-                incomeAmount: amount,
-                incomeDate: incomeDate,
-                currency: selectedCurrency,
-                bankRateForSelectedDateAndCurrency: rate,
-                taxAmountInLari: taxAmount,
-              })
-            : null;
+          const data = {
+            incomeAmount: amount,
+            incomeDate: incomeDate,
+            currency: selectedCurrency,
+            bankRateForSelectedDateAndCurrency: rate,
+            taxAmountInLari: taxAmount,
+          };
+
+          return updateDoc(doc(firestoreDB, 'users', authContext.uid), {
+            incomesList: arrayUnion(data),
+          });
         }
       })
       .catch(error => {

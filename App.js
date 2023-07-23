@@ -46,7 +46,16 @@ function AuthenticatedStack() {
         }}
       />
 
-      {/*<Stack.Screen name="IncomesList" component={IncomeListScreen} />*/}
+      {/*<Stack.Screen*/}
+      {/*  name="Incomes List"*/}
+      {/*  component={IncomeListScreen}*/}
+      {/*  options={{*/}
+      {/*    headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,*/}
+      {/*    headerRight: ({ tintColor }) => (*/}
+      {/*      <IconButton icon="exit" size={24} color={tintColor} onPress={authContext.logout} />*/}
+      {/*    ),*/}
+      {/*  }}*/}
+      {/*/>*/}
     </Stack.Navigator>
   );
 }
