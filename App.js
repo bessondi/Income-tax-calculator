@@ -10,6 +10,7 @@ import CalculatorScreen from './screens/CalculatorScreen';
 import IconButton from './components/ui/IconButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
+// import IncomeListScreen from './screens/IncomeListScreen';
 
 const Stack = createNativeStackNavigator();
 SplashScreen.preventAutoHideAsync();
@@ -35,7 +36,7 @@ function AuthenticatedStack() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Georgia Income Tax"
+        name="Income Tax Calculator"
         component={CalculatorScreen}
         options={{
           headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,
@@ -44,6 +45,8 @@ function AuthenticatedStack() {
           ),
         }}
       />
+
+      {/*<Stack.Screen name="IncomesList" component={IncomeListScreen} />*/}
     </Stack.Navigator>
   );
 }

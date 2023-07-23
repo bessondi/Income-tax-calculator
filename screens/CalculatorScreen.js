@@ -10,12 +10,7 @@ import { Colors } from '../constants/styles';
 import Loader from '../components/ui/Loader';
 import { collection, addDoc } from 'firebase/firestore';
 import { firestoreDB } from '../constants/firebase-config';
-
-const currencyList = [
-  { label: 'USD', value: 'USD' },
-  { label: 'EUR', value: 'EUR' },
-  { label: 'GEL', value: 'GEL' },
-];
+import { currencyList } from '../constants/consts';
 
 function CalculatorScreen() {
   const [currencyRate, setCurrencyRate] = useState('');
