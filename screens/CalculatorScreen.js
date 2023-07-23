@@ -8,6 +8,8 @@ import Button from '../components/ui/Button';
 import { Keyboard } from 'react-native';
 import { Colors } from '../constants/styles';
 import Loader from '../components/ui/Loader';
+import { collection, addDoc } from 'firebase/firestore';
+import { firestoreDB } from '../constants/firebase-config';
 
 const currencyList = [
   { label: 'USD', value: 'USD' },
@@ -15,7 +17,7 @@ const currencyList = [
   { label: 'GEL', value: 'GEL' },
 ];
 
-function HomeScreen() {
+function CalculatorScreen() {
   const [currencyRate, setCurrencyRate] = useState('');
   const [isCalculationAvailable, setIsCalculationAvailable] = useState(false);
   const [hasTaxCalculation, setHasTaxCalculation] = useState(false);
@@ -27,12 +29,11 @@ function HomeScreen() {
   const [date, setDate] = useState(new Date());
   const [messageFromServer, setMessageFromServer] = useState('');
   const authContext = useContext(AuthContext);
-  const token = authContext.token;
 
-  const CalculateButton = () => {
+  const CalculateButton = ({ isDisable }) => {
     return (
       <View style={styles.footer}>
-        <Button onPress={calculateTax} isMediumSize={true} isDisable={isCalculationAvailable}>
+        <Button onPress={calculateTax} isMediumSize={true} isDisable={isDisable}>
           Calculate Tax
         </Button>
       </View>
@@ -48,10 +49,10 @@ function HomeScreen() {
   };
 
   const calculateTax = () => {
-    const chosenIncome = parseFloat(amountValue);
+    const amount = parseFloat(amountValue);
 
     if (selectedCurrency === 'GEL' && taxPercentValue) {
-      setCurrencyRate(((chosenIncome / 100) * taxPercentValue).toFixed(2));
+      setCurrencyRate(((amount / 100) * taxPercentValue).toFixed(2));
       setHasTaxCalculation(true);
       return;
     }
@@ -61,33 +62,49 @@ function HomeScreen() {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const chosenDate = `${year}-${month}-${day}`;
-    const bankCurrencyApi = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=${selectedCurrency}&date=${chosenDate}`;
+    const incomeDate = `${year}-${month}-${day}`;
+    const bankCurrencyApi = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=${selectedCurrency}&date=${incomeDate}`;
 
     axios
       .get(bankCurrencyApi)
       .then(response => {
         const rate = parseFloat(response.data[0].currencies[0].rate);
 
-        if (rate && chosenIncome && taxPercentValue) {
-          setCurrencyRate((((rate * chosenIncome) / 100) * taxPercentValue).toFixed(2));
-        }
+        if (rate && amount && taxPercentValue) {
+          const taxAmount = (((rate * amount) / 100) * taxPercentValue).toFixed(2);
 
-        setHasTaxCalculation(true);
+          setCurrencyRate(taxAmount);
+          setHasTaxCalculation(true);
+          console.log('currencyRate', taxAmount);
+
+          return authContext.isAuthenticated
+            ? addDoc(collection(firestoreDB, 'users'), {
+                incomeAmount: amount,
+                incomeDate: incomeDate,
+                currency: selectedCurrency,
+                bankRateForSelectedDateAndCurrency: rate,
+                taxAmountInLari: taxAmount,
+              })
+            : null;
+        }
       })
-      .catch(err => {
+      .catch(error => {
         setHasTaxCalculation(false);
-        console.log('Something went wrong:', err);
+        console.log('Something went wrong:', error);
       })
       .finally(() => setIsLoadingData(false));
   };
 
   useEffect(() => {
-    axios
-      .get(`https://mobile-app-af614-default-rtdb.europe-west1.firebasedatabase.app/message.json?auth=${token}`)
-      .then(response => setMessageFromServer(response.data))
-      .catch(err => console.log('Message missing', err));
-  }, [token]);
+    if (authContext.isAuthenticated) {
+      axios
+        .get(
+          `https://mobile-app-af614-default-rtdb.europe-west1.firebasedatabase.app/message.json?auth=${authContext.token}`,
+        )
+        .then(response => setMessageFromServer(response.data))
+        .catch(err => console.log('Message missing', err));
+    }
+  }, [authContext.isAuthenticated, authContext.token]);
 
   useEffect(() => {
     const isFormValid = !!(parseInt(amountValue) && parseInt(taxPercentValue) && selectedCurrency && date);
@@ -104,7 +121,7 @@ function HomeScreen() {
       <View style={styles.rootContainer}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Monthly Income</Text>
-          {messageFromServer ? <Text style={styles.message}>messageFromServer</Text> : null}
+          {messageFromServer ? <Text style={styles.message}>{messageFromServer}</Text> : null}
         </View>
 
         <View style={styles.body}>
@@ -162,7 +179,7 @@ function HomeScreen() {
         ) : isLoadingData ? (
           <Loader />
         ) : (
-          <CalculateButton />
+          <CalculateButton isDisable={!isCalculationAvailable} />
         )}
         {}
       </View>
@@ -170,7 +187,7 @@ function HomeScreen() {
   );
 }
 
-export default HomeScreen;
+export default CalculatorScreen;
 
 const styles = StyleSheet.create({
   rootContainer: {
@@ -199,6 +216,8 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 18,
+    marginBottom: 18,
+    textAlign: 'center',
   },
   header: {
     width: '100%',

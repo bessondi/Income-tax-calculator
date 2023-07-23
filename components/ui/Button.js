@@ -2,16 +2,16 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Colors } from '../../constants/styles';
 
-function Button({ children, onPress, isMediumSize, isDisable }) {
+function Button({ children, onPress, isMediumSize, isDisable = false }) {
   return (
     <Pressable
       style={({ pressed }) => [
         styles.button,
-        pressed && isDisable && styles.pressed,
-        !isDisable && styles.disabled,
+        pressed && !isDisable && styles.pressed,
+        isDisable && styles.disabled,
         isMediumSize ? styles.buttonMediumSize : null,
       ]}
-      onPress={isDisable ? onPress : null}
+      onPress={!isDisable ? onPress : null}
     >
       <View>
         <Text style={styles.buttonText}>{children}</Text>

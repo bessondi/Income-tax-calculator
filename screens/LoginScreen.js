@@ -1,9 +1,10 @@
 import { useContext, useState } from 'react';
 import { Alert } from 'react-native';
 import { AuthContext } from '../store/context/auth-context';
-import { login } from '../helpers/auth';
 import AuthContent from '../components/Auth/AuthContent';
 import LoadingOverlay from '../components/ui/LoadingOverlay';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../constants/firebase-config';
 
 function LoginScreen() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
@@ -12,7 +13,8 @@ function LoginScreen() {
   async function loginHandler({ email, password }) {
     setIsAuthenticating(true);
     try {
-      const token = await login(email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const token = await userCredential.user.getIdToken();
       authContext.authenticate(token);
     } catch (_) {
       Alert.alert('Authentication failed', 'Try again later');

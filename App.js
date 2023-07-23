@@ -6,7 +6,7 @@ import AuthContextProvider, { AuthContext, userTokenKey } from './store/context/
 import { Colors } from './constants/styles';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
-import HomeScreen from './screens/HomeScreen';
+import CalculatorScreen from './screens/CalculatorScreen';
 import IconButton from './components/ui/IconButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
@@ -35,8 +35,8 @@ function AuthenticatedStack() {
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Georgia Tax Calculator"
-        component={HomeScreen}
+        name="Georgia Income Tax"
+        component={CalculatorScreen}
         options={{
           headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,
           headerRight: ({ tintColor }) => (
