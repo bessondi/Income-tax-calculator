@@ -9,6 +9,6 @@ export const Colors = {
   white: '#ffffff',
   gray: '#565656',
   mediumGray: '#a1a1a1',
-  lightGray: '#dadada',
+  lightGray: '#c3c3c3',
   green: '#479a29',
 };

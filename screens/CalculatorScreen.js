@@ -43,12 +43,16 @@ function CalculatorScreen() {
     setDate(selectedDate);
   };
 
-  const calculateTax = async () => {
-    const amount = parseFloat(amountValue);
+  const getDateInString = () => {
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
-    const incomeDate = `${year}-${month}-${day}`;
+    return `${year}-${month}-${day}`;
+  };
+
+  const calculateTax = async () => {
+    const amount = parseFloat(amountValue);
+    const incomeDate = getDateInString();
     const bankCurrencyApi = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=${selectedCurrency}&date=${incomeDate}`;
 
     if (selectedCurrency === 'GEL' && taxPercentValue) {
@@ -118,7 +122,12 @@ function CalculatorScreen() {
   }, [authContext.isAuthenticated, authContext.token]);
 
   useEffect(() => {
-    const isFormValid = !!(parseInt(amountValue) && parseInt(taxPercentValue) && selectedCurrency && date);
+    const isFormValid = !!(
+      parseInt(amountValue) &&
+      parseInt(taxPercentValue) &&
+      selectedCurrency &&
+      new Date(date).getTime() <= Date.now()
+    );
     if (isFormValid) {
       setIsCalculationAvailable(true);
       setHasTaxCalculation(false);
@@ -205,8 +214,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingTop: 16,
-    paddingLeft: 32,
-    paddingRight: 32,
+    paddingLeft: 24,
+    paddingRight: 24,
     paddingBottom: 16,
   },
   label: {
@@ -244,6 +253,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderRadius: 8,
+    borderColor: Colors.lightGray,
     backgroundColor: Colors.white,
   },
   bottom: {
@@ -254,6 +264,7 @@ const styles = StyleSheet.create({
   },
   currencyPicker: {
     marginBottom: 12,
+    borderColor: Colors.lightGray,
   },
   datePicker: {
     marginTop: 8,

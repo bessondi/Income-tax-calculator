@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
 import { useContext, useEffect, useState } from 'react';
 import { getDoc, doc } from 'firebase/firestore';
 import { firestoreDB } from '../constants/firebase-config';
@@ -55,33 +55,35 @@ function IncomeListScreen() {
   }, [isFocused]);
 
   return (
-    <View style={styles.rootContainer}>
+    <SafeAreaView style={styles.rootContainer}>
       <Text style={styles.heading}>Previous incomes list</Text>
 
       {isLoadingIncomesData && !incomes.incomesList.length ? (
         <Loader />
       ) : (
-        incomes.incomesList.map(data => (
-          <View key={data.id} style={styles.card}>
-            <View style={styles.leftSide}>
-              <Text style={styles.incomeAmount}>
-                {getCurrencyIcon(data.currency)} {data.incomeAmount}
-              </Text>
-              <Text style={styles.taxAmountInLari}>
-                {getCurrencyIcon()} {data.taxAmountInLari}
-              </Text>
+        <ScrollView style={styles.list}>
+          {incomes.incomesList.map(data => (
+            <View key={data.id} style={styles.card}>
+              <View style={styles.leftSide}>
+                <Text style={styles.incomeAmount}>
+                  Income: {getCurrencyIcon(data.currency)} {data.incomeAmount}
+                </Text>
+                <Text style={styles.taxAmountInLari}>
+                  Tax: {getCurrencyIcon()} {data.taxAmountInLari}
+                </Text>
+              </View>
+              <View style={styles.rightSide}>
+                <Text style={styles.date}>
+                  <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
+                  <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
+                </Text>
+                <Text style={styles.year}>{getYear(data.incomeDate)}</Text>
+              </View>
             </View>
-            <View style={styles.rightSide}>
-              <Text style={styles.date}>
-                <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
-                <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
-              </Text>
-              <Text style={styles.year}>{getYear(data.incomeDate)}</Text>
-            </View>
-          </View>
-        ))
+          ))}
+        </ScrollView>
       )}
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -91,15 +93,18 @@ const styles = StyleSheet.create({
   rootContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 16,
-    paddingLeft: 24,
-    paddingRight: 24,
-    paddingBottom: 16,
+    marginTop: 16,
+    marginBottom: 24,
   },
   heading: {
     fontSize: 24,
     color: Colors.gray,
     marginBottom: 16,
+  },
+  list: {
+    width: '100%',
+    paddingLeft: 24,
+    paddingRight: 24,
   },
   card: {
     flexDirection: 'row',
@@ -109,7 +114,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     width: '100%',
     borderStyle: 'solid',
-    borderColor: Colors.mediumGray,
+    borderColor: Colors.lightGray,
     borderWidth: 1,
     borderRadius: 16,
   },
@@ -129,10 +134,10 @@ const styles = StyleSheet.create({
   incomeAmount: {
     color: Colors.green,
     fontSize: 18,
+    marginBottom: 4,
   },
   taxAmountInLari: {
     color: Colors.error500,
     fontSize: 18,
-    fontWeight: 'bold',
   },
 });
