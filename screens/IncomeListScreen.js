@@ -19,6 +19,11 @@ function IncomeListScreen() {
     return month.charAt(0) !== '0' ? monthsList[month - 1] : monthsList[month.charAt(1) - 1];
   }
 
+  function getYear(date = '') {
+    const year = date.split('-').slice(0, 1).join('').substring(2);
+    return `, ${year}`;
+  }
+
   function getCurrencyIcon(currentCurrency = 'GEL') {
     const currency = currenciesIcons.filter(currency => currency.label === currentCurrency);
     return currency[0].icon;
@@ -55,13 +60,20 @@ function IncomeListScreen() {
       ) : (
         incomes.incomesList.map(data => (
           <View key={data.id} style={styles.card}>
-            <Text style={styles.month}>{getMonth(data.incomeDate)}</Text>
-            <Text style={styles.incomeAmount}>
-              {getCurrencyIcon(data.currency)} {data.incomeAmount}
-            </Text>
-            <Text style={styles.taxAmountInLari}>
-              {getCurrencyIcon()} {data.taxAmountInLari}
-            </Text>
+            <View style={styles.leftSide}>
+              <Text style={styles.incomeAmount}>
+                {getCurrencyIcon(data.currency)} {data.incomeAmount}
+              </Text>
+              <Text style={styles.taxAmountInLari}>
+                {getCurrencyIcon()} {data.taxAmountInLari}
+              </Text>
+            </View>
+            <View style={styles.rightSide}>
+              <Text style={styles.date}>
+                {getMonth(data.incomeDate)}
+                {getYear(data.incomeDate)}
+              </Text>
+            </View>
           </View>
         ))
       )}
@@ -86,14 +98,27 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 16,
-    marginBottom: 16,
-    borderStyle: 'solid',
+    marginBottom: 12,
     width: '100%',
+    borderStyle: 'solid',
+    borderColor: Colors.mediumGray,
     borderWidth: 1,
     borderRadius: 16,
   },
-  month: { fontSize: 22 },
-  incomeAmount: {},
-  taxAmountInLari: {},
+  leftSide: {},
+  rightSide: {},
+  date: { fontSize: 24 },
+  incomeAmount: {
+    color: Colors.green,
+    fontSize: 18,
+  },
+  taxAmountInLari: {
+    color: Colors.error500,
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
 });
