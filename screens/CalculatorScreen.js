@@ -25,6 +25,32 @@ function CalculatorScreen() {
   const [messageFromServer, setMessageFromServer] = useState('');
   const authContext = useContext(AuthContext);
 
+  useEffect(() => {
+    if (authContext.isAuthenticated) {
+      axios
+        .get(
+          `https://mobile-app-af614-default-rtdb.europe-west1.firebasedatabase.app/message.json?auth=${authContext.token}`,
+        )
+        .then(response => setMessageFromServer(response.data))
+        .catch(err => console.log('Message missing', err));
+    }
+  }, [authContext.isAuthenticated, authContext.token]);
+
+  useEffect(() => {
+    const isFormValid = !!(
+      parseInt(amountValue) &&
+      parseInt(taxPercentValue) &&
+      selectedCurrency &&
+      new Date(date).getTime() <= Date.now()
+    );
+    if (isFormValid) {
+      setIsCalculationAvailable(true);
+      setHasTaxCalculation(false);
+    } else {
+      setIsCalculationAvailable(false);
+    }
+  }, [amountValue, taxPercentValue, selectedCurrency, date]);
+
   const CalculateButton = ({ isDisable }) => {
     return (
       <View style={styles.footer}>
@@ -36,7 +62,20 @@ function CalculatorScreen() {
   };
 
   const CalculationResult = () => {
-    return <Text style={styles.result}>{`Your tax for this month is \n ₾ ${currencyRate}`}</Text>;
+    return (
+      <>
+        <View style={styles.result}>
+          <Text style={styles.resultTitle}>
+            {`Your tax for this income is \n`}
+            <Text style={styles.resultTax}>{`₾ ${currencyRate}`}</Text>
+          </Text>
+          <Text style={styles.resultNote}>
+            This tax amount has been saved in your incomes list. Now you can pay it in lari at the tax service of
+            Georgia.
+          </Text>
+        </View>
+      </>
+    );
   };
 
   const onChangeDate = (_, selectedDate) => {
@@ -110,42 +149,16 @@ function CalculatorScreen() {
       .finally(() => setIsLoadingData(false));
   };
 
-  useEffect(() => {
-    if (authContext.isAuthenticated) {
-      axios
-        .get(
-          `https://mobile-app-af614-default-rtdb.europe-west1.firebasedatabase.app/message.json?auth=${authContext.token}`,
-        )
-        .then(response => setMessageFromServer(response.data))
-        .catch(err => console.log('Message missing', err));
-    }
-  }, [authContext.isAuthenticated, authContext.token]);
-
-  useEffect(() => {
-    const isFormValid = !!(
-      parseInt(amountValue) &&
-      parseInt(taxPercentValue) &&
-      selectedCurrency &&
-      new Date(date).getTime() <= Date.now()
-    );
-    if (isFormValid) {
-      setIsCalculationAvailable(true);
-      setHasTaxCalculation(false);
-    } else {
-      setIsCalculationAvailable(false);
-    }
-  }, [amountValue, taxPercentValue, selectedCurrency, date]);
-
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.rootContainer}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Monthly Income</Text>
+          <Text style={styles.headerTitle}>New Income</Text>
           {messageFromServer ? <Text style={styles.message}>{messageFromServer}</Text> : null}
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.label}>Monthly income amount</Text>
+          <Text style={styles.label}>Income amount</Text>
           <View style={styles.top}>
             <TextInput
               style={styles.input}
@@ -160,7 +173,7 @@ function CalculatorScreen() {
               style={styles.input}
               onChangeText={setTaxPercentValue}
               value={taxPercentValue}
-              placeholder="Type your tax percent"
+              placeholder="Type your tax percentage"
               keyboardType="numeric"
             />
           </View>
@@ -201,7 +214,6 @@ function CalculatorScreen() {
         ) : (
           <CalculateButton isDisable={!isCalculationAvailable} />
         )}
-        {}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -230,14 +242,15 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   headerTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    color: Colors.gray,
     marginBottom: 16,
   },
   message: {
     fontSize: 18,
-    marginBottom: 18,
+    color: Colors.gray,
     textAlign: 'center',
+    marginBottom: 18,
   },
   header: {
     width: '100%',
@@ -275,17 +288,30 @@ const styles = StyleSheet.create({
     zIndex: -1,
   },
   result: {
-    fontSize: 24,
-    lineHeight: 32,
-    fontWeight: 'bold',
-    textAlign: 'center',
     borderStyle: 'solid',
     borderColor: Colors.green,
     borderWidth: 1,
     borderRadius: 16,
-    marginTop: 12,
+    marginTop: 16,
     padding: 16,
     width: '100%',
     zIndex: -1,
+  },
+  resultTitle: {
+    fontSize: 24,
+    lineHeight: 34,
+    textAlign: 'center',
+  },
+  resultTax: {
+    fontSize: 24,
+    lineHeight: 30,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  resultNote: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginTop: 16,
   },
 });

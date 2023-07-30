@@ -2,6 +2,7 @@ import { createContext, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, signOut } from 'firebase/auth';
 import { auth } from '../../constants/firebase-config';
+import { Alert } from 'react-native';
 
 export const AuthContext = createContext({
   token: '',
@@ -41,18 +42,29 @@ function AuthContextProvider({ children }) {
   }
 
   async function logout() {
-    const auth = getAuth();
-    signOut(auth).then(() => console.log('signOut'));
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Yes',
+        onPress: async () => {
+          const auth = getAuth();
+          signOut(auth).then(() => console.log('signOut'));
 
-    setUserUid('');
-    setAuthToken('');
+          setUserUid('');
+          setAuthToken('');
 
-    try {
-      await AsyncStorage.removeItem(userUidKey);
-      await AsyncStorage.removeItem(userTokenKey);
-    } catch (error) {
-      console.warn('removeItem', error);
-    }
+          try {
+            await AsyncStorage.removeItem(userUidKey);
+            await AsyncStorage.removeItem(userTokenKey);
+          } catch (error) {
+            console.warn('removeItem', error);
+          }
+        },
+      },
+    ]);
   }
 
   const value = {

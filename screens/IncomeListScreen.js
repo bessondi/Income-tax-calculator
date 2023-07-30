@@ -15,6 +15,72 @@ function IncomeListScreen() {
   const [isLoadingIncomesData, setIsLoadingIncomesData] = useState(false);
   const isFocused = useIsFocused();
 
+  useEffect(() => {
+    const getIncomesData = async () => {
+      if (authContext.isAuthenticated) {
+        const docRef = doc(firestoreDB, 'users', authContext.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setIncomes(docSnap.data());
+        } else {
+          console.log('No such document!');
+        }
+      } else {
+        await authContext.logout();
+      }
+      setIsLoadingIncomesData(false);
+    };
+
+    setIsLoadingIncomesData(true);
+    getIncomesData().then().catch(console.error);
+  }, [isFocused]);
+
+  const IncomesList = () => {
+    const sortedIncomesInDescendingOrder = incomes.incomesList.sort((a, b) => {
+      const firstDate = new Date(a.incomeDate).getTime();
+      const secondDate = new Date(b.incomeDate).getTime();
+      return firstDate > secondDate ? -1 : firstDate < secondDate ? 1 : 0;
+    });
+
+    const list = sortedIncomesInDescendingOrder.map(data => (
+      <View key={data.id} style={styles.card}>
+        <View style={styles.leftSide}>
+          <Text style={styles.date}>
+            <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
+            <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
+            <Text style={styles.year}> {getYear(data.incomeDate)}</Text>
+          </Text>
+          <Text style={styles.incomeAmount}>
+            Income: {getCurrencyIcon(data.currency)} {data.incomeAmount}
+          </Text>
+          <Text style={styles.taxAmountInLari}>
+            Tax: {getCurrencyIcon()} {data.taxAmountInLari}
+          </Text>
+        </View>
+        <View style={styles.rightSide}>
+          <Pressable
+            style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
+            onPress={() => removeIncome(data)}
+          >
+            <Ionicons name="trash-bin-outline" size={20} color={Colors.error700} />
+          </Pressable>
+        </View>
+      </View>
+    ));
+
+    return (
+      <>
+        {incomes.incomesList.length ? list : <Text style={styles.emptyRecords}>You don't have any incomes yet 😊</Text>}
+        {incomes.incomesList.length ? <TaxAmount /> : null}
+      </>
+    );
+  };
+
+  const TaxAmount = () => (
+    <Text style={styles.totalTax}>{`Your total tax amount in Georgian Lari is \n ₾ ${getTotalTaxAmount()}`}</Text>
+  );
+
   function getDay(date = '') {
     const day = date.split('-').slice(2, 3).join('');
     return day.charAt(0) === '0' ? day.substring(1, 2) : day;
@@ -47,63 +113,19 @@ function IncomeListScreen() {
       .catch(console.error);
   }
 
-  useEffect(() => {
-    const getIncomesData = async () => {
-      if (authContext.isAuthenticated) {
-        const docRef = doc(firestoreDB, 'users', authContext.uid);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setIncomes(docSnap.data());
-        } else {
-          console.log('No such document!');
-        }
-      } else {
-        await authContext.logout();
-      }
-      setIsLoadingIncomesData(false);
-    };
-
-    setIsLoadingIncomesData(true);
-    getIncomesData().then().catch(console.error);
-  }, [isFocused]);
+  function getTotalTaxAmount() {
+    return incomes.incomesList.reduce((total, income) => total + parseFloat(income.taxAmountInLari), 0).toFixed(2);
+  }
 
   return (
     <SafeAreaView style={styles.rootContainer}>
-      <Text style={styles.heading}>Previous incomes list</Text>
+      <Text style={styles.heading}>Incomes list</Text>
 
-      {isLoadingIncomesData && !incomes.incomesList.length ? (
+      {isLoadingIncomesData ? (
         <Loader />
       ) : (
         <ScrollView style={styles.list}>
-          {incomes.incomesList.map(data => (
-            <View key={data.id} style={styles.card}>
-              <View style={styles.leftSide}>
-                <Text style={styles.incomeAmount}>
-                  Income: {getCurrencyIcon(data.currency)} {data.incomeAmount}
-                </Text>
-                <Text style={styles.taxAmountInLari}>
-                  Tax: {getCurrencyIcon()} {data.taxAmountInLari}
-                </Text>
-              </View>
-              <View style={styles.rightSide}>
-                <View style={styles.incomeDate}>
-                  <Text style={styles.date}>
-                    <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
-                    <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
-                  </Text>
-                  <Text style={styles.year}>{getYear(data.incomeDate)}</Text>
-                </View>
-
-                <Pressable
-                  style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
-                  onPress={() => removeIncome(data)}
-                >
-                  <Ionicons name="trash-bin-outline" size={20} color={Colors.error700} />
-                </Pressable>
-              </View>
-            </View>
-          ))}
+          <IncomesList />
         </ScrollView>
       )}
     </SafeAreaView>
@@ -117,10 +139,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 16,
-    marginBottom: 24,
+    marginBottom: 26,
   },
   heading: {
-    fontSize: 24,
+    fontSize: 28,
     color: Colors.gray,
     marginBottom: 16,
   },
@@ -136,9 +158,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     width: '100%',
-    borderStyle: 'solid',
-    borderColor: Colors.lightGray,
-    borderWidth: 1,
+    backgroundColor: Colors.white,
     borderRadius: 16,
   },
   leftSide: { flex: 1 },
@@ -146,17 +166,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  incomeDate: {
-    marginRight: 16,
-  },
   date: {
     flexDirection: 'column',
     color: Colors.mediumGray,
+    marginBottom: 16,
   },
   day: { fontSize: 14 },
   month: { fontSize: 14 },
   year: {
-    textAlign: 'right',
     fontSize: 14,
     color: Colors.mediumGray,
   },
@@ -166,7 +183,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   taxAmountInLari: {
-    color: Colors.error500,
+    color: Colors.gray,
     fontSize: 18,
   },
   removeButton: {
@@ -177,5 +194,18 @@ const styles = StyleSheet.create({
   },
   pressed: {
     borderColor: Colors.error700,
+  },
+  emptyRecords: {
+    marginTop: 32,
+    textAlign: 'center',
+    fontSize: 20,
+    color: Colors.mediumGray,
+  },
+  totalTax: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: Colors.mediumGray,
+    paddingTop: 16,
+    paddingBottom: 32,
   },
 });
