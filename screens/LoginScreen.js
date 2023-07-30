@@ -6,7 +6,7 @@ import LoadingOverlay from '../components/ui/LoadingOverlay';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../constants/firebase-config';
 
-function LoginScreen() {
+function LoginScreen({ navigation }) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const authContext = useContext(AuthContext);
 
@@ -27,7 +27,7 @@ function LoginScreen() {
     return <LoadingOverlay message="Logging..." />;
   }
 
-  return <AuthContent isLogin onAuthenticate={loginHandler} />;
+  return <AuthContent isLogin onAuthenticate={loginHandler} navigation={navigation} />;
 }
 
 export default LoginScreen;

@@ -1,5 +1,4 @@
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useContext, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import AuthContextProvider, { AuthContext, userTokenKey } from './store/context/auth-context';
@@ -10,9 +9,10 @@ import CalculatorScreen from './screens/CalculatorScreen';
 import IconButton from './components/ui/IconButton';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SplashScreen from 'expo-splash-screen';
-// import IncomeListScreen from './screens/IncomeListScreen';
+import IncomeListScreen from './screens/IncomeListScreen';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 
-const Stack = createNativeStackNavigator();
+const Drawer = createDrawerNavigator();
 SplashScreen.preventAutoHideAsync();
 
 const screenOptions = {
@@ -23,10 +23,10 @@ const screenOptions = {
 
 function AuthenticatingStack() {
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Signup" component={SignupScreen} />
-    </Stack.Navigator>
+    <Drawer.Navigator screenOptions={screenOptions}>
+      <Drawer.Screen name="Login" component={LoginScreen} options={{ headerLeft: () => null }} />
+      <Drawer.Screen name="Signup" component={SignupScreen} options={{ headerLeft: () => null }} />
+    </Drawer.Navigator>
   );
 }
 
@@ -34,29 +34,27 @@ function AuthenticatedStack() {
   const authContext = useContext(AuthContext);
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
-      <Stack.Screen
+    <Drawer.Navigator initialRouteName="Incomes List" screenOptions={screenOptions}>
+      <Drawer.Screen
         name="Income Tax Calculator"
         component={CalculatorScreen}
         options={{
-          headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,
           headerRight: ({ tintColor }) => (
             <IconButton icon="exit" size={24} color={tintColor} onPress={authContext.logout} />
           ),
         }}
       />
 
-      {/*<Stack.Screen*/}
-      {/*  name="Incomes List"*/}
-      {/*  component={IncomeListScreen}*/}
-      {/*  options={{*/}
-      {/*    headerLeft: ({ tintColor }) => <IconButton icon="menu" size={30} color={tintColor} />,*/}
-      {/*    headerRight: ({ tintColor }) => (*/}
-      {/*      <IconButton icon="exit" size={24} color={tintColor} onPress={authContext.logout} />*/}
-      {/*    ),*/}
-      {/*  }}*/}
-      {/*/>*/}
-    </Stack.Navigator>
+      <Drawer.Screen
+        name="Incomes List"
+        component={IncomeListScreen}
+        options={{
+          headerRight: ({ tintColor }) => (
+            <IconButton icon="exit" size={24} color={tintColor} onPress={authContext.logout} />
+          ),
+        }}
+      />
+    </Drawer.Navigator>
   );
 }
 

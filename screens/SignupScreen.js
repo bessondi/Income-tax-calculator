@@ -7,7 +7,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, firestoreDB } from '../constants/firebase-config';
 import { doc, setDoc } from 'firebase/firestore';
 
-function SignupScreen() {
+function SignupScreen({ navigation }) {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const authContext = useContext(AuthContext);
 
@@ -32,7 +32,7 @@ function SignupScreen() {
     return <LoadingOverlay message="Creating user..." />;
   }
 
-  return <AuthContent onAuthenticate={signupHandler} />;
+  return <AuthContent onAuthenticate={signupHandler} navigation={navigation} />;
 }
 
 export default SignupScreen;
