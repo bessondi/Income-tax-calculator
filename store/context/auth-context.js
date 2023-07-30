@@ -31,7 +31,6 @@ function AuthContextProvider({ children }) {
     setUserUid(uid);
     setAuthToken(token);
     try {
-      console.log(uid, '======', token);
       if (uid && token) {
         await AsyncStorage.setItem(userUidKey, uid);
         await AsyncStorage.setItem(userTokenKey, token);

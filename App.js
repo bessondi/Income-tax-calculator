@@ -1,7 +1,7 @@
 import { NavigationContainer } from '@react-navigation/native';
 import { useContext, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import AuthContextProvider, { AuthContext, userTokenKey } from './store/context/auth-context';
+import AuthContextProvider, { AuthContext, userTokenKey, userUidKey } from './store/context/auth-context';
 import { Colors } from './constants/styles';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -75,20 +75,21 @@ function Root() {
   useEffect(() => {
     async function loadingDataAsync() {
       try {
+        const uid = await AsyncStorage.getItem(userUidKey);
         const token = await AsyncStorage.getItem(userTokenKey);
 
-        if (token) {
-          authContext.authenticate(token);
+        if (uid && token) {
+          await authContext.authenticate(uid, token);
         }
-      } catch (e) {
-        console.warn(e);
+      } catch (error) {
+        console.warn(error);
       } finally {
         setIsLoginInProgress(false);
-        SplashScreen.hideAsync();
+        await SplashScreen.hideAsync();
       }
     }
 
-    loadingDataAsync();
+    loadingDataAsync().then().catch(console.error);
   }, []);
 
   return !isLoginInProgress ? <Navigation /> : null;
