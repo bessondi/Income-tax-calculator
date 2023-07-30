@@ -114,8 +114,6 @@ function CalculatorScreen() {
         )
         .then(response => setMessageFromServer(response.data))
         .catch(err => console.log('Message missing', err));
-    } else {
-      authContext.logout().then();
     }
   }, [authContext.isAuthenticated, authContext.token]);
 
