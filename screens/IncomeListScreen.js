@@ -1,12 +1,13 @@
-import { StyleSheet, Text, View, ScrollView, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, SafeAreaView, Pressable } from 'react-native';
 import { useContext, useEffect, useState } from 'react';
-import { getDoc, doc } from 'firebase/firestore';
+import { getDoc, doc, updateDoc, arrayRemove } from 'firebase/firestore';
 import { firestoreDB } from '../constants/firebase-config';
 import { Colors } from '../constants/styles';
 import { AuthContext } from '../store/context/auth-context';
 import { currenciesIcons, monthsList } from '../constants/consts';
 import Loader from '../components/ui/Loader';
 import { useIsFocused } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 function IncomeListScreen() {
   const authContext = useContext(AuthContext);
@@ -31,6 +32,19 @@ function IncomeListScreen() {
   function getCurrencyIcon(currentCurrency = 'GEL') {
     const currency = currenciesIcons.filter(currency => currency.label === currentCurrency);
     return currency[0].icon;
+  }
+
+  function removeIncome(income) {
+    updateDoc(doc(firestoreDB, 'users', authContext.uid), {
+      incomesList: arrayRemove(income),
+    })
+      .then(() => {
+        setIncomes({
+          incomesList: incomes.incomesList.filter(item => item.id !== income.id),
+        });
+        console.log(income, 'removed');
+      })
+      .catch(console.error);
   }
 
   useEffect(() => {
@@ -73,11 +87,20 @@ function IncomeListScreen() {
                 </Text>
               </View>
               <View style={styles.rightSide}>
-                <Text style={styles.date}>
-                  <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
-                  <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
-                </Text>
-                <Text style={styles.year}>{getYear(data.incomeDate)}</Text>
+                <View style={styles.incomeDate}>
+                  <Text style={styles.date}>
+                    <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
+                    <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
+                  </Text>
+                  <Text style={styles.year}>{getYear(data.incomeDate)}</Text>
+                </View>
+
+                <Pressable
+                  style={({ pressed }) => [styles.removeButton, pressed && styles.pressed]}
+                  onPress={() => removeIncome(data)}
+                >
+                  <Ionicons name="trash-bin-outline" size={20} color={Colors.error700} />
+                </Pressable>
               </View>
             </View>
           ))}
@@ -118,8 +141,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 16,
   },
-  leftSide: {},
-  rightSide: {},
+  leftSide: { flex: 1 },
+  rightSide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  incomeDate: {
+    marginRight: 16,
+  },
   date: {
     flexDirection: 'column',
     color: Colors.mediumGray,
@@ -139,5 +168,14 @@ const styles = StyleSheet.create({
   taxAmountInLari: {
     color: Colors.error500,
     fontSize: 18,
+  },
+  removeButton: {
+    padding: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.lightGray,
+  },
+  pressed: {
+    borderColor: Colors.error700,
   },
 });

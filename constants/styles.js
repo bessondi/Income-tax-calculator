@@ -5,6 +5,7 @@ export const Colors = {
 
   error100: '#fcdcbf',
   error500: '#f37c13',
+  error700: '#f33c13',
 
   white: '#ffffff',
   gray: '#565656',
