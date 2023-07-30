@@ -14,14 +14,18 @@ function IncomeListScreen() {
   const [isLoadingIncomesData, setIsLoadingIncomesData] = useState(false);
   const isFocused = useIsFocused();
 
+  function getDay(date = '') {
+    const day = date.split('-').slice(2, 3).join('');
+    return day.charAt(0) === '0' ? day.substring(1, 2) : day;
+  }
+
   function getMonth(date = '') {
     const month = date.split('-').slice(1, 2).join('');
     return month.charAt(0) !== '0' ? monthsList[month - 1] : monthsList[month.charAt(1) - 1];
   }
 
   function getYear(date = '') {
-    const year = date.split('-').slice(0, 1).join('').substring(2);
-    return `, ${year}`;
+    return date.split('-').slice(0, 1).join('');
   }
 
   function getCurrencyIcon(currentCurrency = 'GEL') {
@@ -36,7 +40,6 @@ function IncomeListScreen() {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          console.log('Document data:', docSnap.data());
           setIncomes(docSnap.data());
         } else {
           console.log('No such document!');
@@ -48,12 +51,12 @@ function IncomeListScreen() {
     };
 
     setIsLoadingIncomesData(true);
-    getIncomesData().catch(console.error);
+    getIncomesData().then().catch(console.error);
   }, [isFocused]);
 
   return (
     <View style={styles.rootContainer}>
-      <Text style={styles.heading}>Previous incomes</Text>
+      <Text style={styles.heading}>Previous incomes list</Text>
 
       {isLoadingIncomesData && !incomes.incomesList.length ? (
         <Loader />
@@ -70,9 +73,10 @@ function IncomeListScreen() {
             </View>
             <View style={styles.rightSide}>
               <Text style={styles.date}>
-                {getMonth(data.incomeDate)}
-                {getYear(data.incomeDate)}
+                <Text style={styles.month}>{getMonth(data.incomeDate)}, </Text>
+                <Text style={styles.day}>{getDay(data.incomeDate)}</Text>
               </Text>
+              <Text style={styles.year}>{getYear(data.incomeDate)}</Text>
             </View>
           </View>
         ))
@@ -111,7 +115,17 @@ const styles = StyleSheet.create({
   },
   leftSide: {},
   rightSide: {},
-  date: { fontSize: 24 },
+  date: {
+    flexDirection: 'column',
+    color: Colors.mediumGray,
+  },
+  day: { fontSize: 14 },
+  month: { fontSize: 14 },
+  year: {
+    textAlign: 'right',
+    fontSize: 14,
+    color: Colors.mediumGray,
+  },
   incomeAmount: {
     color: Colors.green,
     fontSize: 18,
