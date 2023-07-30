@@ -29,19 +29,31 @@ function AuthContextProvider({ children }) {
 
   async function authenticate(uid, token) {
     setUserUid(uid);
-    await AsyncStorage.setItem(userUidKey, uid);
     setAuthToken(token);
-    await AsyncStorage.setItem(userTokenKey, token);
+    try {
+      console.log(uid, '======', token);
+      if (uid && token) {
+        await AsyncStorage.setItem(userUidKey, uid);
+        await AsyncStorage.setItem(userTokenKey, token);
+      }
+    } catch (error) {
+      console.warn('setItem', error);
+    }
   }
 
   async function logout() {
     const auth = getAuth();
     signOut(auth).then(() => console.log('signOut'));
 
-    setUserUid(null);
-    await AsyncStorage.removeItem(userUidKey);
-    setAuthToken(null);
-    await AsyncStorage.removeItem(userTokenKey);
+    setUserUid('');
+    setAuthToken('');
+
+    try {
+      await AsyncStorage.removeItem(userUidKey);
+      await AsyncStorage.removeItem(userTokenKey);
+    } catch (error) {
+      console.warn('removeItem', error);
+    }
   }
 
   const value = {

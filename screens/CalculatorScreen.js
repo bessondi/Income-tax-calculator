@@ -43,22 +43,36 @@ function CalculatorScreen() {
     setDate(selectedDate);
   };
 
-  const calculateTax = () => {
+  const calculateTax = async () => {
     const amount = parseFloat(amountValue);
-
-    if (selectedCurrency === 'GEL' && taxPercentValue) {
-      setCurrencyRate(((amount / 100) * taxPercentValue).toFixed(2));
-      setHasTaxCalculation(true);
-      return;
-    }
-
-    setIsLoadingData(true);
-
     const year = date.getFullYear();
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
     const day = date.getDate().toString().padStart(2, '0');
     const incomeDate = `${year}-${month}-${day}`;
     const bankCurrencyApi = `https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/?currencies=${selectedCurrency}&date=${incomeDate}`;
+
+    if (selectedCurrency === 'GEL' && taxPercentValue) {
+      const taxAmount = ((amount / 100) * taxPercentValue).toFixed(2);
+      setCurrencyRate(taxAmount);
+
+      const data = {
+        id: Date.now(),
+        incomeAmount: amount,
+        incomeDate: incomeDate,
+        currency: selectedCurrency,
+        bankRateForSelectedDateAndCurrency: null,
+        taxAmountInLari: taxAmount,
+      };
+
+      await updateDoc(doc(firestoreDB, 'users', authContext.uid), {
+        incomesList: arrayUnion(data),
+      });
+
+      setHasTaxCalculation(true);
+      return;
+    }
+
+    setIsLoadingData(true);
 
     axios
       .get(bankCurrencyApi)
@@ -72,6 +86,7 @@ function CalculatorScreen() {
           setHasTaxCalculation(true);
 
           const data = {
+            id: Date.now(),
             incomeAmount: amount,
             incomeDate: incomeDate,
             currency: selectedCurrency,
@@ -99,6 +114,8 @@ function CalculatorScreen() {
         )
         .then(response => setMessageFromServer(response.data))
         .catch(err => console.log('Message missing', err));
+    } else {
+      authContext.logout().then();
     }
   }, [authContext.isAuthenticated, authContext.token]);
 

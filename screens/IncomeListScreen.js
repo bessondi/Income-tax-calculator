@@ -5,10 +5,14 @@ import { firestoreDB } from '../constants/firebase-config';
 import { Colors } from '../constants/styles';
 import { AuthContext } from '../store/context/auth-context';
 import { currenciesIcons, monthsList } from '../constants/consts';
+import Loader from '../components/ui/Loader';
+import { useIsFocused } from '@react-navigation/native';
 
 function IncomeListScreen() {
   const authContext = useContext(AuthContext);
   const [incomes, setIncomes] = useState({ incomesList: [] });
+  const [isLoadingIncomesData, setIsLoadingIncomesData] = useState(false);
+  const isFocused = useIsFocused();
 
   function getMonth(date = '') {
     const month = date.split('-').slice(1, 2).join('');
@@ -32,29 +36,35 @@ function IncomeListScreen() {
         } else {
           console.log('No such document!');
         }
+      } else {
+        await authContext.logout();
       }
+      setIsLoadingIncomesData(false);
     };
 
+    setIsLoadingIncomesData(true);
     getIncomesData().catch(console.error);
-  }, []);
+  }, [isFocused]);
 
   return (
     <View style={styles.rootContainer}>
       <Text style={styles.heading}>Previous incomes</Text>
 
-      {incomes.incomesList
-        ? incomes.incomesList.map(data => (
-            <View key={data.id} style={styles.card}>
-              <Text style={styles.month}>{getMonth(data.incomeDate)}</Text>
-              <Text style={styles.incomeAmount}>
-                {getCurrencyIcon(data.currency)} {data.incomeAmount}
-              </Text>
-              <Text style={styles.taxAmountInLari}>
-                {getCurrencyIcon()} {data.taxAmountInLari}
-              </Text>
-            </View>
-          ))
-        : null}
+      {isLoadingIncomesData && !incomes.incomesList.length ? (
+        <Loader />
+      ) : (
+        incomes.incomesList.map(data => (
+          <View key={data.id} style={styles.card}>
+            <Text style={styles.month}>{getMonth(data.incomeDate)}</Text>
+            <Text style={styles.incomeAmount}>
+              {getCurrencyIcon(data.currency)} {data.incomeAmount}
+            </Text>
+            <Text style={styles.taxAmountInLari}>
+              {getCurrencyIcon()} {data.taxAmountInLari}
+            </Text>
+          </View>
+        ))
+      )}
     </View>
   );
 }
