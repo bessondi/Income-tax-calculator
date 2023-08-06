@@ -6,3 +6,5 @@ To find out the tax rate, set the income amount value, income date, desired curr
 In the income list, you can view all your income records.
 
 ![preview](demo/preview.png)
+
+![demo](demo/demo.gif)
